@@ -9,9 +9,8 @@ import android.hardware.Camera.Parameters;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.SurfaceView;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
 import com.google.android.gms.ads.AdRequest;
@@ -19,11 +18,11 @@ import com.google.android.gms.ads.AdView;
 
 public class LumioActivity extends Activity {
 
+    private static Parameters params;
+    private static Camera camera;
     ImageButton btnSwitch;
     CameraPreview mPreview;
-    Parameters params;
     MediaPlayer mp;
-    private Camera camera;
     private boolean isFlashOn;
     private boolean hasFlash;
 
@@ -31,21 +30,24 @@ public class LumioActivity extends Activity {
      * A safe way to get an instance of the Camera object.
      */
     public static Camera getCameraInstance() {
-        Camera c = null;
+
         try {
-            c = Camera.open(); // attempt to get a Camera instance
+            camera = Camera.open(0); // attempt to get a Camera instance
+            //c.setPreviewDisplay(mHolder);
+            params = camera.getParameters();
         } catch (Exception e) {
             // Camera is not available (in use or does not exist)
             e.printStackTrace();
         }
-        return c; // returns null if camera is unavailable
+        return camera; // returns null if camera is unavailable
     }
 
     @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.e("onCreate","onCreate");
+
         super.onCreate(savedInstanceState);
+
         // First check if device is supporting flashlight or not
         hasFlash = getApplicationContext().getPackageManager()
                 .hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
@@ -71,7 +73,7 @@ public class LumioActivity extends Activity {
         setContentView(R.layout.activity_lumio);
 
         AdView adView = (AdView) this.findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice("CBE2AF3297271837F59FC7D2015854C1").build();
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("E3701ED24111B22A5D023B68FE77F45A").build();
         adView.loadAd(adRequest);
 
         // flash switch button
@@ -81,8 +83,8 @@ public class LumioActivity extends Activity {
         camera = getCameraInstance();
 
         mPreview = new CameraPreview(this, camera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-        preview.addView(mPreview);
+        SurfaceView preview = (SurfaceView) findViewById(R.id.camera_preview);
+        //preview.addView(mPreview);
 
         // displaying button image
         toggleButtonImage();
@@ -111,7 +113,7 @@ public class LumioActivity extends Activity {
 
     // Turning On flash
     private void turnOnFlash() {
-        Log.e("turnOnFlash", "turnOnFlash");
+
         if (!isFlashOn) {
             if (camera == null || params == null) {
                 return;
@@ -134,7 +136,7 @@ public class LumioActivity extends Activity {
 
     // Turning Off flash
     private void turnOffFlash() {
-        Log.e("turnOffFlash", "turnOffFlash");
+
         if (isFlashOn) {
             if (camera == null || params == null) {
                 return;
@@ -158,7 +160,7 @@ public class LumioActivity extends Activity {
     // Playing sound
     // will play button toggle sound on flash on / off
     private void playSound() {
-        Log.e("playSound", "playSound");
+
         if(isFlashOn){
             mp = MediaPlayer.create(LumioActivity.this, R.raw.light_switch_off);
         }else{
@@ -180,7 +182,7 @@ public class LumioActivity extends Activity {
      * changing image states to on / off
      * */
     private void toggleButtonImage() {
-        Log.e("toggleButtonImage", "toggleButtonImage");
+
         if(isFlashOn){
             btnSwitch.setImageResource(R.mipmap.light_on);
         }else{
@@ -190,13 +192,13 @@ public class LumioActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        Log.e("onDestroy", "onDestroy");
+
         super.onDestroy();
     }
 
     @Override
     protected void onPause() {
-        Log.e("onPause","onPause");
+
         super.onPause();
         // on pause turn off the flash
         turnOffFlash();
@@ -204,13 +206,12 @@ public class LumioActivity extends Activity {
 
     @Override
     protected void onRestart() {
-        Log.e("onRestart", "onRestart");
+
         super.onRestart();
     }
 
     @Override
     protected void onResume() {
-        Log.e("onResume","onResume");
         super.onResume();
 
         // on resume turn on the flash
@@ -221,7 +222,7 @@ public class LumioActivity extends Activity {
 
     @Override
     protected void onStop() {
-        Log.e("onStop","onStop");
+
         super.onStop();
 
         // on stop release the camera
@@ -231,7 +232,13 @@ public class LumioActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
 
+        // on starting the app get the camera params
+        getCameraInstance();
+    }
 
 
 }
