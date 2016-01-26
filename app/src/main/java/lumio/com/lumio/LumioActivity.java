@@ -1,55 +1,52 @@
 package lumio.com.lumio;
 
-import java.io.IOException;
-
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-
-
-
-import android.media.MediaPlayer;
-import android.media.MediaPlayer.OnCompletionListener;
-import android.os.Bundle;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.os.Bundle;
 import android.util.Log;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
-public class LumioActivity extends Activity implements SurfaceHolder.Callback{
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+
+public class LumioActivity extends Activity {
 
     ImageButton btnSwitch;
-    public static SurfaceView preview;
-    public static SurfaceHolder mHolder;
+    CameraPreview mPreview;
+    Parameters params;
+    MediaPlayer mp;
     private Camera camera;
     private boolean isFlashOn;
     private boolean hasFlash;
-    Parameters params;
-    MediaPlayer mp;
+
+    /**
+     * A safe way to get an instance of the Camera object.
+     */
+    public static Camera getCameraInstance() {
+        Camera c = null;
+        try {
+            c = Camera.open(); // attempt to get a Camera instance
+        } catch (Exception e) {
+            // Camera is not available (in use or does not exist)
+            e.printStackTrace();
+        }
+        return c; // returns null if camera is unavailable
+    }
 
     @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.e("onCreate","onCreate");
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lumio);
-
-        AdView adView = (AdView)this.findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice("CBE2AF3297271837F59FC7D2015854C1").build();
-        adView.loadAd(adRequest);
-
-        // flash switch button
-        btnSwitch = (ImageButton) findViewById(R.id.btnSwitch);
-        SurfaceView preview = (SurfaceView) findViewById(R.id.PREVIEW);
-        SurfaceHolder mHolder = preview.getHolder();
-        mHolder.addCallback(this);
-
-        // First check if device is supporting flashlight or not        
+        // First check if device is supporting flashlight or not
         hasFlash = getApplicationContext().getPackageManager()
                 .hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH);
 
@@ -70,12 +67,25 @@ public class LumioActivity extends Activity implements SurfaceHolder.Callback{
             return;
         }
 
-        // get the camera
-        getCamera();
+
+        setContentView(R.layout.activity_lumio);
+
+        AdView adView = (AdView) this.findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice("CBE2AF3297271837F59FC7D2015854C1").build();
+        adView.loadAd(adRequest);
+
+        // flash switch button
+        btnSwitch = (ImageButton) findViewById(R.id.btnSwitch);
+        // preview = (SurfaceView) findViewById(R.id.PREVIEW);
+
+        camera = getCameraInstance();
+
+        mPreview = new CameraPreview(this, camera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
 
         // displaying button image
         toggleButtonImage();
-
 
         // Switch button click event to toggle flash on/off
         btnSwitch.setOnClickListener(new View.OnClickListener() {
@@ -87,36 +97,21 @@ public class LumioActivity extends Activity implements SurfaceHolder.Callback{
                     turnOffFlash();
                 } else {
                     // turn on flash
-                    try{
+                    try {
                         turnOnFlash();
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
         });
+
+
     }
-
-
-    // Get the camera
-    private void getCamera() {
-        if (camera == null) {
-            try {
-                camera = Camera.open();
-                camera.setPreviewDisplay(mHolder);
-                params = camera.getParameters();
-            } catch (RuntimeException e) {
-                Log.e("Camera Error. Error: ", e.getMessage());
-            } catch (IOException e) {
-
-                e.printStackTrace();
-            }
-        }
-    }
-
 
     // Turning On flash
     private void turnOnFlash() {
+        Log.e("turnOnFlash", "turnOnFlash");
         if (!isFlashOn) {
             if (camera == null || params == null) {
                 return;
@@ -139,6 +134,7 @@ public class LumioActivity extends Activity implements SurfaceHolder.Callback{
 
     // Turning Off flash
     private void turnOffFlash() {
+        Log.e("turnOffFlash", "turnOffFlash");
         if (isFlashOn) {
             if (camera == null || params == null) {
                 return;
@@ -161,7 +157,8 @@ public class LumioActivity extends Activity implements SurfaceHolder.Callback{
 
     // Playing sound
     // will play button toggle sound on flash on / off
-    private void playSound(){
+    private void playSound() {
+        Log.e("playSound", "playSound");
         if(isFlashOn){
             mp = MediaPlayer.create(LumioActivity.this, R.raw.light_switch_off);
         }else{
@@ -182,7 +179,8 @@ public class LumioActivity extends Activity implements SurfaceHolder.Callback{
      * Toggle switch button images
      * changing image states to on / off
      * */
-    private void toggleButtonImage(){
+    private void toggleButtonImage() {
+        Log.e("toggleButtonImage", "toggleButtonImage");
         if(isFlashOn){
             btnSwitch.setImageResource(R.mipmap.light_on);
         }else{
@@ -192,24 +190,27 @@ public class LumioActivity extends Activity implements SurfaceHolder.Callback{
 
     @Override
     protected void onDestroy() {
+        Log.e("onDestroy", "onDestroy");
         super.onDestroy();
     }
 
     @Override
     protected void onPause() {
+        Log.e("onPause","onPause");
         super.onPause();
-
         // on pause turn off the flash
         turnOffFlash();
     }
 
     @Override
     protected void onRestart() {
+        Log.e("onRestart", "onRestart");
         super.onRestart();
     }
 
     @Override
     protected void onResume() {
+        Log.e("onResume","onResume");
         super.onResume();
 
         // on resume turn on the flash
@@ -217,16 +218,10 @@ public class LumioActivity extends Activity implements SurfaceHolder.Callback{
             turnOnFlash();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        // on starting the app get the camera params
-        getCamera();
-    }
 
     @Override
     protected void onStop() {
+        Log.e("onStop","onStop");
         super.onStop();
 
         // on stop release the camera
@@ -237,31 +232,6 @@ public class LumioActivity extends Activity implements SurfaceHolder.Callback{
     }
 
 
-    @Override
-    public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
 
-
-    }
-
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-
-        mHolder = holder;
-        try {
-            camera.setPreviewDisplay(mHolder);
-        } catch (IOException e) {
-
-            e.printStackTrace();
-        }
-    }
-
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder arg0) {
-
-        camera.stopPreview();
-        mHolder = null;
-    }
 
 }

@@ -11,21 +11,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@null"
-        android:contentDescription="@null"
+        android:contentDescription="@string/app_name"
         android:src="@mipmap/light_off" />
-    <SurfaceView
-        android:id="@+id/PREVIEW"
-        android:layout_width="1dip"
-        android:layout_height="1dip"/>
+    <FrameLayout
+        android:id="@+id/camera_preview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+
+        />
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/adView"
         android:layout_width="fill_parent"
-        android:layout_height="60dp"
+        android:layout_height="50dp"
         android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
         ads:adSize="BANNER"
-        ads:adUnitId="ca-app-pub-4436162643502435/4523166054"
-        android:layout_centerHorizontal="true">
+        ads:adUnitId="ca-app-pub-4436162643502435/4523166054">
 
     </com.google.android.gms.ads.AdView>
 
